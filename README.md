@@ -1,4 +1,9 @@
 # go-mysql-lock
+[![GoDoc](https://godoc.org/github.com/sanketplus/go-mysql-lock?status.svg)](https://godoc.org/github.com/sanketplus/go-mysql-lock)
+[![Azure DevOps builds](https://img.shields.io/azure-devops/build/sanketplus/go-mysql-lock/1)](https://dev.azure.com/sanketplus/go-mysql-lock/_build?definitionId=1)
+[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/sanketplus/go-mysql-lock/1)](https://dev.azure.com/sanketplus/go-mysql-lock/_build?definitionId=1)
+[![Go Report Card](https://goreportcard.com/badge/github.com/sanketplus/go-mysql-lock)](https://goreportcard.com/report/github.com/sanketplus/go-mysql-lock)
+
 go-mysql-lock provides locking primitive based on MySQL's [GET_LOCK](https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html#function_get-lock)
 
 ### Example:
