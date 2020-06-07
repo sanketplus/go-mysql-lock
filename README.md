@@ -32,10 +32,10 @@ func main() {
 #### Customizable Refresh Period
 Once the lock is obtained, a goroutine periodically (default every 1 second) keeps pinging on connection since the lock is valid on a connection(session). To configure refresh interval
 ```go
-locker := gomysqllock.NewMysqlLocker(db, WithRefreshInterval(time.Millisecond*500))
+locker := gomysqllock.NewMysqlLocker(db, gomysqllock.WithRefreshInterval(time.Millisecond*500))
 ```
 
-#### Knowing When The Lock is Lost
+#### Know When The Lock is Lost
 Obtained lock has a context which is cancelled if the lock is lost. This is determined while a goroutine keeps pinging the connection. If there is an error while pinging, assuming connection has an error, the context is cancelled. And the lock owner gets notified of the lost lock.
 ```go
 context := lock.GetContext()
