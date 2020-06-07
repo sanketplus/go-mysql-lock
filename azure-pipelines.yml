@@ -11,6 +11,8 @@ pool:
 
 variables:
   GOVERSION: 1.14
+  GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
+  GOBIN:  '$(GOPATH)/bin' # Go binaries path
 
 steps:
 - script: |
@@ -20,14 +22,26 @@ steps:
 - task: GoTool@0
   displayName: 'Use Go $(GOVERSION)'
   inputs:
-    version: $(GOVERSION)
+    version: '$(GOVERSION)'
+
 - task: Go@0
   inputs:
     command: 'get'
-    arguments: 'github.com/mattn/goveralls'
-  displayName: "Setup Coveralls"
+    arguments: 'github.com/axw/gocov/...'
+
 - task: Go@0
   inputs:
-    command: 'test'
-    arguments: '-v ./...'
-  displayName: "Execute Tests"
+    command: 'get'
+    arguments: 'github.com/AlekSi/gocov-xml'
+
+- script: |
+    $GOBIN/gocov test -v | $GOBIN/gocov-xml > coverage.xml
+  workingDirectory: $(System.DefaultWorkingDirectory)
+  displayName: "Execute Tests and Generate Coverage Report"
+
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: 'Cobertura'
+    summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
+    failIfCoverageEmpty: true
+  displayName: "Publish Coverage Results"
