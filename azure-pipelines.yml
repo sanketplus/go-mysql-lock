@@ -1,0 +1,34 @@
+# Go
+# Build your Go project.
+# Add steps that test, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/go
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  GOVERSION: 1.13
+
+steps:
+- script: |
+    docker run -d -p 3306:3306 --name mysql8 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mysql:8
+  displayName: 'Start Mysql docker'
+
+- task: GoTool@0
+  displayName: 'Use Go $(GOVERSION)'
+  inputs:
+    version: $(GOVERSION)
+- task: Go@0
+  inputs:
+    command: 'get'
+    arguments: 'github.com/mattn/goveralls'
+  displayName: "Setup Coveralls"
+- task: Go@0
+  inputs:
+    command: 'test'
+    arguments: '-v'
+    workingDirectory: '$(modulePath)'
+  displayName: "Execute Tests"
