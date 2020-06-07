@@ -17,7 +17,7 @@ func setupDB(t *testing.T) *sql.DB {
 	return db
 }
 
-func getLockContext(t *testing.T, key string, db *sql.DB, ctx context.Context) *Lock {
+func getLockContext(ctx context.Context, t *testing.T, key string, db *sql.DB) *Lock {
 	locker := NewMysqlLocker(db)
 	l, err := locker.ObtainContext(ctx, key)
 	assert.NoError(t, err, "failed to obtain lock")
@@ -40,7 +40,7 @@ func TestMysqlLocker_LockContext_Success(t *testing.T) {
 	ctx := context.Background()
 	db := setupDB(t)
 	key := "foo"
-	lock := getLockContext(t, key, db, ctx)
+	lock := getLockContext(ctx, t, key, db)
 	lockContext := lock.GetContext()
 	releaseLock(t, lock)
 

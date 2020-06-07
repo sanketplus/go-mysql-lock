@@ -7,22 +7,20 @@ import (
 	"time"
 )
 
+// DefaultRefreshInterval is the periodic duration with which a connection is refreshed/pinged
 const DefaultRefreshInterval = time.Second
 
-type LockerOpt func(locker *MysqlLocker)
+type lockerOpt func(locker *MysqlLocker)
 
+// MysqlLocker is the client which provide APIs to obtain lock
 type MysqlLocker struct {
 	db              *sql.DB
 	refreshInterval time.Duration
 	unlocker        chan (struct{})
 }
 
-type MysqlLockerInterface interface {
-	Obtain(string) (context.Context, error)
-	ObtainContext(context.Context, string) (context.Context, error)
-}
-
-func NewMysqlLocker(db *sql.DB, lockerOpts ...LockerOpt) *MysqlLocker {
+// NewMysqlLocker returns an instance of locker which can be used to obtain locks
+func NewMysqlLocker(db *sql.DB, lockerOpts ...lockerOpt) *MysqlLocker {
 	locker := &MysqlLocker{
 		db:              db,
 		refreshInterval: DefaultRefreshInterval,
@@ -36,14 +34,17 @@ func NewMysqlLocker(db *sql.DB, lockerOpts ...LockerOpt) *MysqlLocker {
 	return locker
 }
 
-func WithRefreshInterval(d time.Duration) LockerOpt {
+// WithRefreshInterval sets the duration for refresh interval for each obtained lock
+func WithRefreshInterval(d time.Duration) lockerOpt {
 	return func(l *MysqlLocker) { l.refreshInterval = d }
 }
 
+// Obtain tries to acquire lock with background context. This call is expected to block is lock is already held
 func (l MysqlLocker) Obtain(key string) (*Lock, error) {
 	return l.ObtainContext(context.Background(), key)
 }
 
+// ObtainContext tries to acquire lock and gives up when the given context is cancelled
 func (l MysqlLocker) ObtainContext(ctx context.Context, key string) (*Lock, error) {
 	cancellableContext, cancelFunc := context.WithCancel(context.Background())
 
