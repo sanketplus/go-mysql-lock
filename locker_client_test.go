@@ -61,8 +61,10 @@ func TestMysqlLocker_LockContext_Timeout(t *testing.T) {
 	lock := getLock(t, key, db)
 
 	// try to get the same lock with timeout context
-	ctxShort, _ := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
+	ctxShort, cancelFunc := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
 	_, err := locker.ObtainContext(ctxShort, key)
+
+	cancelFunc()
 	assert.Equal(t, ErrGetLockContextCancelled, err)
 
 	releaseLock(t, lock)

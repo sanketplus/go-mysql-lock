@@ -49,6 +49,7 @@ func (l MysqlLocker) ObtainContext(ctx context.Context, key string) (*Lock, erro
 
 	dbConn, err := l.db.Conn(ctx)
 	if err != nil {
+		cancelFunc()
 		return nil, fmt.Errorf("failed to get a db connection: %w", err)
 	}
 
@@ -60,10 +61,12 @@ func (l MysqlLocker) ObtainContext(ctx context.Context, key string) (*Lock, erro
 		// mysql error does not tell if it was due to context closing, checking it manually
 		select {
 		case <-ctx.Done():
+			cancelFunc()
 			return nil, ErrGetLockContextCancelled
 		default:
 			break
 		}
+		cancelFunc()
 		return nil, fmt.Errorf("could not read mysql response: %w", err)
 	}
 

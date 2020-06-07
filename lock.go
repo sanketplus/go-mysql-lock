@@ -29,11 +29,12 @@ func (l Lock) refresher(duration time.Duration, cancelFunc context.CancelFunc) {
 		select {
 		case <-time.After(duration):
 			deadline := time.Now().Add(duration)
-			contextDeadline, _ := context.WithDeadline(context.Background(), deadline)
+			contextDeadline, deadlineCancelFunc := context.WithDeadline(context.Background(), deadline)
 			// try refresh, else cancel
 			err := l.conn.PingContext(contextDeadline)
 			if err != nil {
 				cancelFunc()
+				deadlineCancelFunc()
 				return
 			}
 		case <-l.unlocker:
