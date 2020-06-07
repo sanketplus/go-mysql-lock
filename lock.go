@@ -23,7 +23,7 @@ func (l Lock) GetContext() context.Context {
 
 // Release unlocks the lock
 func (l Lock) Release() error {
-	close(l.unlocker)
+	l.unlocker<- struct{}{}
 	l.conn.ExecContext(context.Background(), "DO RELEASE_LOCK(?)", l.key)
 	return l.conn.Close()
 }
