@@ -10,7 +10,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  GOVERSION: 1.13
+  GOVERSION: 1.14
 
 steps:
 - script: |
