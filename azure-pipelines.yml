@@ -5,12 +5,13 @@
 
 trigger:
 - master
+- dev
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  GOVERSION: 1.14
+  GOVERSION: 1.13
   GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
   GOBIN:  '$(GOPATH)/bin' # Go binaries path
 
