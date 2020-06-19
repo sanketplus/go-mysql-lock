@@ -39,6 +39,8 @@ func (l Lock) refresher(duration time.Duration, cancelFunc context.CancelFunc) {
 			if err != nil {
 				cancelFunc()
 				deadlineCancelFunc()
+				// this will make sure connection is closed
+				l.Release()
 				return
 			}
 		case <-l.unlocker:

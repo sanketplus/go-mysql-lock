@@ -87,6 +87,7 @@ func TestMysqlLocker_DBError_AfterLock(t *testing.T) {
 	// making sure lock's context is done after db is closed
 	select {
 	case <-lockContext.Done():
+		assert.Contains(t, lockContext.Err().Error(), "context canceled")
 	default:
 		assert.Fail(t, "lock's context is not cancelled after lock is released")
 	}

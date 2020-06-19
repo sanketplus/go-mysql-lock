@@ -74,7 +74,7 @@ func (l MysqlLocker) ObtainContext(ctx context.Context, key string) (*Lock, erro
 	lock := &Lock{
 		key:             key,
 		conn:            dbConn,
-		unlocker:        make(chan (struct{})),
+		unlocker:        make(chan struct{}),
 		lostLockContext: cancellableContext,
 		cancelFunc:      cancelFunc,
 	}
