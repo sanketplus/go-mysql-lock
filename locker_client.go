@@ -44,7 +44,7 @@ func (l MysqlLocker) Obtain(key string) (*Lock, error) {
 	return l.ObtainTimeoutContext(context.Background(), key, -1)
 }
 
-// Obtain tries to acquire lock with background context. This call is expected to block is lock is already held
+// ObtainTimeout tries to acquire lock with background context and a MySQL timeout. This call is expected to block is lock is already held
 func (l MysqlLocker) ObtainTimeout(key string, timeout int) (*Lock, error) {
 	return l.ObtainTimeoutContext(context.Background(), key, timeout)
 }
@@ -54,7 +54,7 @@ func (l MysqlLocker) ObtainContext(ctx context.Context, key string) (*Lock, erro
 	return l.ObtainTimeoutContext(ctx, key, -1)
 }
 
-// ObtainContext tries to acquire lock and gives up when the given context is cancelled
+// ObtainTimeoutContext tries to acquire lock and gives up when the given context is cancelled
 func (l MysqlLocker) ObtainTimeoutContext(ctx context.Context, key string, timeout int) (*Lock, error) {
 	cancellableContext, cancelFunc := context.WithCancel(context.Background())
 
@@ -82,9 +82,11 @@ func (l MysqlLocker) ObtainTimeoutContext(ctx context.Context, key string, timeo
 	} else if res == 2 {
 		// Internal MySQL error occurred, such as out-of-memory, thread killed or others (the doc is not clear)
 		// Note: some MySQL/MariaDB versions (like MariaDB 10.1) does not support -1 as timeout parameters
+		cancelFunc()
 		return nil, ErrMySQLInternalError
 	} else if res == 0 {
 		// MySQL Timeout
+		cancelFunc()
 		return nil, ErrMySQLTimeout
 	}
 
