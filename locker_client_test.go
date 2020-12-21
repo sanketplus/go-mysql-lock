@@ -110,5 +110,5 @@ func TestMysqlLocker_Obtain_DBScanError(t *testing.T) {
 
 	// setting very long key name shall result into error
 	_, err := locker.Obtain(strings.Repeat("x", 100))
-	assert.Contains(t, err.Error(), "internal mysql error acquiring the lock")
+	assert.Contains(t, err.Error(), "could not read mysql response")
 }

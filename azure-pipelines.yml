@@ -20,6 +20,10 @@ steps:
     docker run -d -p 3306:3306 --name mysql8 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mysql:8
   displayName: 'Start Mysql docker'
 
+- script: |
+    docker run -d -p 3305:3306 --name mariadb101 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mariadb:10.1
+  displayName: 'Start old MariaDB docker'
+
 - task: GoTool@0
   displayName: 'Use Go $(GOVERSION)'
   inputs:

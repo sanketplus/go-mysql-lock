@@ -1,5 +1,3 @@
-// +build oldmysql
-
 package gomysqllock
 
 import (
@@ -13,38 +11,38 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupDB(t *testing.T) *sql.DB {
-	db, err := sql.Open("mysql", "root:root@tcp(localhost:3306)/")
+func setupDB_oldDB(t *testing.T) *sql.DB {
+	db, err := sql.Open("mysql", "root@tcp(localhost:3305)/")
 	assert.NoError(t, err, "failed to setup db")
 	return db
 }
 
-func getLockContext(ctx context.Context, t *testing.T, key string, db *sql.DB) *Lock {
+func getLockContext_oldDB(ctx context.Context, t *testing.T, key string, db *sql.DB) *Lock {
 	locker := NewMysqlLocker(db)
 	l, err := locker.ObtainTimeoutContext(ctx, key, 100000)
 	assert.NoError(t, err, "failed to obtain lock")
 	return l
 }
 
-func getLock(t *testing.T, key string, db *sql.DB) *Lock {
+func getLock_oldDB(t *testing.T, key string, db *sql.DB) *Lock {
 	locker := NewMysqlLocker(db)
 	l, err := locker.ObtainTimeout(key, 10)
 	assert.NoError(t, err, "failed to obtain lock")
 	return l
 }
 
-func releaseLock(t *testing.T, l *Lock) {
+func releaseLock_oldDB(t *testing.T, l *Lock) {
 	err := l.Release()
 	assert.NoError(t, err, "failed to release lock")
 }
 
-func TestMysqlLocker_LockContext_Success(t *testing.T) {
+func TestMysqlLocker_LockContext_oldDB_Success(t *testing.T) {
 	ctx := context.Background()
-	db := setupDB(t)
+	db := setupDB_oldDB(t)
 	key := "foo"
-	lock := getLockContext(ctx, t, key, db)
+	lock := getLockContext_oldDB(ctx, t, key, db)
 	lockContext := lock.GetContext()
-	releaseLock(t, lock)
+	releaseLock_oldDB(t, lock)
 
 	// making sure lock's context is done after lock is released
 	select {
@@ -54,13 +52,13 @@ func TestMysqlLocker_LockContext_Success(t *testing.T) {
 	}
 }
 
-func TestMysqlLocker_LockContext_Timeout(t *testing.T) {
-	db := setupDB(t)
+func TestMysqlLocker_LockContext_oldDB_Timeout(t *testing.T) {
+	db := setupDB_oldDB(t)
 	locker := NewMysqlLocker(db, WithRefreshInterval(time.Millisecond*500))
 	key := "bar"
 
 	// obtain lock
-	lock := getLock(t, key, db)
+	lock := getLock_oldDB(t, key, db)
 
 	// try to get the same lock with timeout context
 	ctxShort, cancelFunc := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
@@ -69,15 +67,15 @@ func TestMysqlLocker_LockContext_Timeout(t *testing.T) {
 	cancelFunc()
 	assert.Equal(t, ErrGetLockContextCancelled, err)
 
-	releaseLock(t, lock)
+	releaseLock_oldDB(t, lock)
 }
 
-func TestMysqlLocker_DBError_AfterLock(t *testing.T) {
-	db := setupDB(t)
+func TestMysqlLocker_DBError_oldDB_AfterLock(t *testing.T) {
+	db := setupDB_oldDB(t)
 	key := "baz"
 
 	// obtain lock
-	lock := getLock(t, key, db)
+	lock := getLock_oldDB(t, key, db)
 	lockContext := lock.GetContext()
 
 	// perhaps also simulate db crash
@@ -95,7 +93,7 @@ func TestMysqlLocker_DBError_AfterLock(t *testing.T) {
 	}
 }
 
-func TestMysqlLocker_Obtain_DBError(t *testing.T) {
+func TestMysqlLocker_Obtain_oldDB_DBError(t *testing.T) {
 	// broken db connection
 	db, _ := sql.Open("mysql", "root@tcp(localhost:33006)/")
 	locker := NewMysqlLocker(db)
@@ -104,8 +102,8 @@ func TestMysqlLocker_Obtain_DBError(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to get a db connection")
 }
 
-func TestMysqlLocker_Obtain_DBScanError(t *testing.T) {
-	db, _ := sql.Open("mysql", "root:root@tcp(localhost:3306)/")
+func TestMysqlLocker_Obtain_oldDB_DBScanError(t *testing.T) {
+	db, _ := sql.Open("mysql", "root@tcp(localhost:3305)/")
 	locker := NewMysqlLocker(db)
 
 	// setting very long key name shall result into error
