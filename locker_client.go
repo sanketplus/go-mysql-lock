@@ -24,7 +24,7 @@ func NewMysqlLocker(db *sql.DB, lockerOpts ...lockerOpt) *MysqlLocker {
 	locker := &MysqlLocker{
 		db:              db,
 		refreshInterval: DefaultRefreshInterval,
-		unlocker:        make(chan (struct{})),
+		unlocker:        make(chan (struct{}), 1),
 	}
 
 	for _, opt := range lockerOpts {

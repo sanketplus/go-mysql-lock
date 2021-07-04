@@ -11,7 +11,14 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	// ignoring go routines spawned for db connection maintenance
+	goleak.VerifyTestMain(m, goleak.IgnoreTopFunction("database/sql.(*DB).connectionOpener"),
+		goleak.IgnoreTopFunction("github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher.func1"))
+}
 
 func setupDB(t *testing.T) *sql.DB {
 	db, err := sql.Open("mysql", "root@tcp(localhost:3306)/")
