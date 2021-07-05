@@ -16,7 +16,6 @@ type lockerOpt func(locker *MysqlLocker)
 type MysqlLocker struct {
 	db              *sql.DB
 	refreshInterval time.Duration
-	unlocker        chan (struct{})
 }
 
 // NewMysqlLocker returns an instance of locker which can be used to obtain locks
@@ -24,7 +23,6 @@ func NewMysqlLocker(db *sql.DB, lockerOpts ...lockerOpt) *MysqlLocker {
 	locker := &MysqlLocker{
 		db:              db,
 		refreshInterval: DefaultRefreshInterval,
-		unlocker:        make(chan (struct{})),
 	}
 
 	for _, opt := range lockerOpts {
@@ -93,7 +91,7 @@ func (l MysqlLocker) ObtainTimeoutContext(ctx context.Context, key string, timeo
 	lock := &Lock{
 		key:             key,
 		conn:            dbConn,
-		unlocker:        make(chan struct{}),
+		unlocker:        make(chan struct{}, 1),
 		lostLockContext: cancellableContext,
 		cancelFunc:      cancelFunc,
 	}

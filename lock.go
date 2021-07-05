@@ -34,6 +34,7 @@ func (l Lock) refresher(duration time.Duration, cancelFunc context.CancelFunc) {
 		case <-time.After(duration):
 			deadline := time.Now().Add(duration)
 			contextDeadline, deadlineCancelFunc := context.WithDeadline(context.Background(), deadline)
+
 			// try refresh, else cancel
 			err := l.conn.PingContext(contextDeadline)
 			if err != nil {
@@ -43,8 +44,10 @@ func (l Lock) refresher(duration time.Duration, cancelFunc context.CancelFunc) {
 				l.Release()
 				return
 			}
+			deadlineCancelFunc() // to avoid context leak
 		case <-l.unlocker:
 			cancelFunc()
+			return
 		}
 	}
 }
