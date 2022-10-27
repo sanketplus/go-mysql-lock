@@ -64,7 +64,7 @@ func (l MysqlLocker) ObtainTimeoutContext(ctx context.Context, key string, timeo
 
 	row := dbConn.QueryRowContext(ctx, "SELECT GET_LOCK(?, ?)", key, timeout)
 
-	var res sql.NullInt16
+	var res sql.NullInt32
 	err = row.Scan(&res)
 	if err != nil {
 		// mysql error does not tell if it was due to context closing, checking it manually
@@ -82,7 +82,7 @@ func (l MysqlLocker) ObtainTimeoutContext(ctx context.Context, key string, timeo
 		// Note: some MySQL/MariaDB versions (like MariaDB 10.1) does not support -1 as timeout parameters
 		cancelFunc()
 		return nil, ErrMySQLInternalError
-	} else if res.Int16 == 0 {
+	} else if res.Int32 == 0 {
 		// MySQL Timeout
 		cancelFunc()
 		return nil, ErrMySQLTimeout
