@@ -62,9 +62,9 @@ func (l MysqlLocker) ObtainTimeoutContext(ctx context.Context, key string, timeo
 		return nil, fmt.Errorf("failed to get a db connection: %w", err)
 	}
 
-	row := dbConn.QueryRowContext(ctx, "SELECT COALESCE(GET_LOCK(?, ?), 2)", key, timeout)
+	row := dbConn.QueryRowContext(ctx, "SELECT GET_LOCK(?, ?)", key, timeout)
 
-	var res int
+	var res sql.NullInt16
 	err = row.Scan(&res)
 	if err != nil {
 		// mysql error does not tell if it was due to context closing, checking it manually
@@ -77,12 +77,12 @@ func (l MysqlLocker) ObtainTimeoutContext(ctx context.Context, key string, timeo
 		}
 		cancelFunc()
 		return nil, fmt.Errorf("could not read mysql response: %w", err)
-	} else if res == 2 {
+	} else if !res.Valid {
 		// Internal MySQL error occurred, such as out-of-memory, thread killed or others (the doc is not clear)
 		// Note: some MySQL/MariaDB versions (like MariaDB 10.1) does not support -1 as timeout parameters
 		cancelFunc()
 		return nil, ErrMySQLInternalError
-	} else if res == 0 {
+	} else if res.Int16 == 0 {
 		// MySQL Timeout
 		cancelFunc()
 		return nil, ErrMySQLTimeout
