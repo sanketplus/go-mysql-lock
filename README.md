@@ -79,6 +79,6 @@ context := lock.GetContext()
 
 ### Compatibility
 
-This library is tested (automatically) against MySQL 8 and MariaDB 10.1, and it should work for MariaDB versions >= 10.1 and MySQL versions >= 5.6.
+This library is tested (automatically) against MySQL 8 and MariaDB 10.1, and it should work for MariaDB versions >= 10.1, MySQL versions >= 5.6, and Vitess versions >= 15.0.
 
 Note that `GET_LOCK` function won't lock indefinitely on MariaDB 10.1 / MySQL 5.6 and older, as `0` or negative value for timeouts are not accepted in those versions. This means that **in MySQL <= 5.6 / MariaDB <= 10.1 you can't use `Obtain` or `ObtainContext`**. To achieve a similar goal, you can use `ObtainTimeout` (and `ObtainTimeoutContext`) using a very high timeout value.
