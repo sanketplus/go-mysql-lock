@@ -1,3 +1,4 @@
+//go:build !oldmysql
 // +build !oldmysql
 
 package gomysqllock
@@ -120,4 +121,25 @@ func TestMysqlLocker_Obtain_DBScanError(t *testing.T) {
 	// setting very long key name shall result into error
 	_, err := locker.Obtain(strings.Repeat("x", 100))
 	assert.Contains(t, err.Error(), "could not read mysql response")
+}
+
+func TestMysqlLocker_Multiple_Release(t *testing.T) {
+	ctx := context.Background()
+	db := setupDB(t)
+	key := "foo"
+	lock := getLockContext(ctx, t, key, db)
+	lockContext := lock.GetContext()
+	releaseLock(t, lock)
+
+	// making sure lock's context is done after lock is released
+	select {
+	case <-lockContext.Done():
+	default:
+		assert.Fail(t, "lock's context is not cancelled after lock is released")
+	}
+
+	// Attempt to release a second time. We expect to get an error indicating the lock is
+	// already released.
+	err := lock.Release()
+	assert.Equal(t, err, ErrLockReleased, "expected an error indicating that the lock was already released")
 }
