@@ -3,7 +3,13 @@ package gomysqllock
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"sync"
 	"time"
+)
+
+var (
+	ErrLockReleased = errors.New("Lock already released")
 )
 
 // Lock denotes an acquired lock and presents two methods, one for getting the context which is cancelled when the lock
@@ -14,21 +20,30 @@ type Lock struct {
 	unlocker        chan (struct{})
 	lostLockContext context.Context
 	cancelFunc      context.CancelFunc
+	released        bool
+	mx              sync.Mutex
 }
 
 // GetContext returns a context which is cancelled when the lock is lost or released
-func (l Lock) GetContext() context.Context {
+func (l *Lock) GetContext() context.Context {
 	return l.lostLockContext
 }
 
 // Release unlocks the lock
-func (l Lock) Release() error {
-	l.unlocker <- struct{}{}
-	l.conn.ExecContext(context.Background(), "DO RELEASE_LOCK(?)", l.key)
-	return l.conn.Close()
+func (l *Lock) Release() error {
+	l.mx.Lock()
+	defer l.mx.Unlock()
+	if !l.released {
+		l.released = true
+		l.unlocker <- struct{}{}
+		l.conn.ExecContext(context.Background(), "DO RELEASE_LOCK(?)", l.key)
+		return l.conn.Close()
+	}
+
+	return ErrLockReleased
 }
 
-func (l Lock) refresher(duration time.Duration, cancelFunc context.CancelFunc) {
+func (l *Lock) refresher(duration time.Duration, cancelFunc context.CancelFunc) {
 	for {
 		select {
 		case <-time.After(duration):
