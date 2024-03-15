@@ -66,7 +66,7 @@ func (l MysqlLocker) ObtainTimeoutContext(ctx context.Context, key string, timeo
 
 	var res sql.NullInt32
 	err = row.Scan(&res)
-	if err != nil || res != 1 {
+	if err != nil || !res.Valid || res.Int32 != int32(1) {
 		defer dbConn.Close()
 
 		// mysql error does not tell if it was due to context closing, checking it manually
