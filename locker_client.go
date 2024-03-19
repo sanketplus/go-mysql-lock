@@ -67,6 +67,8 @@ func (l MysqlLocker) ObtainTimeoutContext(ctx context.Context, key string, timeo
 	var res sql.NullInt32
 	err = row.Scan(&res)
 	if err != nil {
+		//Close database connection whenever failed to acquire lock
+		defer dbConn.Close()
 		// mysql error does not tell if it was due to context closing, checking it manually
 		select {
 		case <-ctx.Done():
@@ -78,11 +80,15 @@ func (l MysqlLocker) ObtainTimeoutContext(ctx context.Context, key string, timeo
 		cancelFunc()
 		return nil, fmt.Errorf("could not read mysql response: %w", err)
 	} else if !res.Valid {
+		//Close database connection whenever failed to acquire lock
+		defer dbConn.Close()
 		// Internal MySQL error occurred, such as out-of-memory, thread killed or others (the doc is not clear)
 		// Note: some MySQL/MariaDB versions (like MariaDB 10.1) does not support -1 as timeout parameters
 		cancelFunc()
 		return nil, ErrMySQLInternalError
 	} else if res.Int32 == 0 {
+		//Close database connection whenever failed to acquire lock
+		defer dbConn.Close()
 		// MySQL Timeout
 		cancelFunc()
 		return nil, ErrMySQLTimeout
